@@ -2,6 +2,7 @@
 #define __meshinspect__AppWindow__
 
 #include <QMainWindow>
+#include <QAction>
 #include "NodeList.h"
 
 class AppWindow : public QMainWindow
@@ -17,9 +18,19 @@ public slots:
     void save();
     void saveAs();
     void getProjection();
+    void saveDepth();
+    void saveMaxArea();
+    void saveMaxLength();
+    void saveMaxDH();
+    void saveMaxDT();
+    void saveMinArea();
+    void saveMinLength();
+    void saveMinDH();
+    void saveMinDT();
     
 private:
     NodeList * appData;
+    QAction * polarStats;
     
     void setupMenu();
     void setupAppTabs();

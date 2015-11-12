@@ -10,6 +10,10 @@
 #define NOD_ISLAND   2
 #define NOD_UNKNOWN  11111
 
+#define EXPORT_AREA 0
+#define EXPORT_D_T  1
+#define EXPORT_D_H  2
+
 #define PAGES 5
 
 typedef struct _node {
@@ -70,5 +74,8 @@ void generate_histogram(int which, double max, double min, double value, int ** 
 void side_stats(nodelist * nlist, int ** histData, double ** stats);
 void side_stats_polar(nodelist * nlist, int ** histData, double ** stats);
 void boundary_stats(nodelist * list, int ** histData, double ** stats, int polarStats);
+void print_general(nodelist * list, int polar, int minMax, int which, const char * file);
+void print_depth(nodelist * list, const char * file);
+void print_side(nodelist * list, int polar, int minMax, const char * file);
 
 #endif

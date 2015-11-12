@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <signal.h>
@@ -255,7 +256,6 @@ void boundary_stats(nodelist * list, int ** histData, double ** stats, int polar
             histData[j][i] = 0;
     
     // Find element area's first
-    
     for (unsigned int i = 0; i < list->numNodes; i++) {
         node * cur = list->nodes[i];
         short idx = cur->neighbourCount;
@@ -274,15 +274,15 @@ void boundary_stats(nodelist * list, int ** histData, double ** stats, int polar
                         int first, second, temp;
                         
                         if (j < l) {
-                            first = j;
+                            first  = j;
                             second = l;
                         } else {
-                            first = l;
+                            first  = l;
                             second = j;
                         }
                         if ((j == 0 && l == cur->neighbourCount - 1) || (l == 0 && j == cur->neighbourCount - 1)) {
-                            temp = first;
-                            first = second;
+                            temp   = first;
+                            first  = second;
                             second = temp;
                         }
                         if (polarStats)
@@ -316,18 +316,18 @@ void boundary_stats(nodelist * list, int ** histData, double ** stats, int polar
                         if (fabs(h3) < min) min = fabs(h3);
                         
                         if (min < cutoffValue) min = cutoffValue;
-                        if (h1 < cutoffValue) h1 = cutoffValue;
-                        if (h2 < cutoffValue) h2 = cutoffValue;
-                        if (h3 < cutoffValue) h3 = cutoffValue;
+                        if (h1 < cutoffValue)  h1 = cutoffValue;
+                        if (h2 < cutoffValue)  h2 = cutoffValue;
+                        if (h3 < cutoffValue)  h3 = cutoffValue;
                         if (min != 0) {
                             deltah = realloc(deltah, sizeof(double)*(++deltas)*3);
                             if (!deltah) panic("Out of memory!", 5);
-                            dh1 = fabs(h2-h1)/min;
-                            dh2 = fabs(h3-h2)/min;
-                            dh3 = fabs(h3-h1)/min;
-                            deltah[(deltas-1)*3] = dh1;
-                            deltah[(deltas-1)*3 + 1] = dh2;
-                            deltah[(deltas-1)*3 + 2] = dh3;
+                            dh1 = fabs(h2 - h1)/min;
+                            dh2 = fabs(h3 - h2)/min;
+                            dh3 = fabs(h3 - h1)/min;
+                            deltah[(deltas - 1)*3]     = dh1;
+                            deltah[(deltas - 1)*3 + 1] = dh2;
+                            deltah[(deltas - 1)*3 + 2] = dh3;
                         }
                         
                     }
@@ -336,7 +336,7 @@ void boundary_stats(nodelist * list, int ** histData, double ** stats, int polar
         }
     }
     
-    max = min = areas[0];
+    max  = min = areas[0];
     mean = 0;
     if (error == 0) {
         for (int i = 0; i < areacount; i++) {
@@ -345,7 +345,7 @@ void boundary_stats(nodelist * list, int ** histData, double ** stats, int polar
             mean += areas[i];
         }
         
-        mean = mean/areacount;
+        mean      = mean/areacount;
         deviation = 0;
         for (int i = 0; i < areacount; i++) {
             deviation = deviation + (areas[i] - mean)*(areas[i] - mean);
@@ -363,8 +363,7 @@ void boundary_stats(nodelist * list, int ** histData, double ** stats, int polar
     stats[1][3] = deviation;
     
     // Now do depth
-    
-    max = min = list->nodes[0]->depth;
+    max  = min = list->nodes[0]->depth;
     mean = 0;
     for (unsigned int i = 0; i < list->numNodes; i++) {
         double curDepth = list->nodes[i]->depth;
@@ -373,7 +372,7 @@ void boundary_stats(nodelist * list, int ** histData, double ** stats, int polar
         mean += curDepth;
     }
     
-    mean = mean/list->numNodes;
+    mean      = mean/list->numNodes;
     deviation = 0;
     for (unsigned int i = 0; i < list->numNodes; i++) {
         double curDepth = list->nodes[i]->depth;
@@ -388,14 +387,12 @@ void boundary_stats(nodelist * list, int ** histData, double ** stats, int polar
     stats[2][3] = deviation;
     
     // Side stats
-    
     if (polarStats)
         side_stats_polar(list, histData, stats);
     else
         side_stats(list, histData, stats);
     
     // Now find delta h over h
-    
     min  = max = deltah[0];
     mean = 0;
     for (int i = 0; i < deltas*3; i++) {
@@ -419,9 +416,8 @@ void boundary_stats(nodelist * list, int ** histData, double ** stats, int polar
     stats[0][3] = deviation;
     
     // Delta t
-    
     if (error == 0) {
-        min = max = dts[0];
+        min  = max = dts[0];
         mean = 0;
         for (int i = 0; i < dtcount; i++) {
             if (dts[i] > max) max = dts[i];
@@ -429,13 +425,13 @@ void boundary_stats(nodelist * list, int ** histData, double ** stats, int polar
             mean += dts[i];
         }
         
-        mean = mean/dtcount;
+        mean      = mean/dtcount;
         deviation = 0;
         for (int i = 0; i < dtcount; i++) {
             generate_histogram(4, max, min, dts[i], histData);
-            deviation = deviation + (dts[i]-mean)*(dts[i]-mean);
+            deviation = deviation + (dts[i] - mean)*(dts[i] - mean);
         }
-        deviation = sqrt(deviation/(dtcount-1));
+        deviation = sqrt(deviation/(dtcount - 1));
     } else {
         max = min = mean = deviation = HUGE_VAL;
     }
@@ -447,10 +443,10 @@ void boundary_stats(nodelist * list, int ** histData, double ** stats, int polar
     stats[4][3] = deviation;
     
 	// Finally, do bandwidth
-    
     imax = 0;
     for (unsigned int i = 0; i < list->numNodes; i++) {
         node * cur = list->nodes[i];
+        
         for (short j = 0; j < cur->neighbourCount; j++) {
             if (abs((int)cur->number - (int)cur->neighbours[j]) > imax)
                 imax = abs((int)cur->number - (int)cur->neighbours[j]);
@@ -458,6 +454,166 @@ void boundary_stats(nodelist * list, int ** histData, double ** stats, int polar
     }
     
     imax = 2*imax + 1;
-    // TODO: Put this somewhere
+    // TODO: Put this (mesh bandwidth) somewhere
+}
+
+void print_general(nodelist * list, int polar, int minMax, int which, const char * file)
+{
+    char mesh[128];
+    int count;
+    double ma, mad, cad, ddm;
+    FILE * fp = fopen(file, "w");
+    if (!fp) return;
+    
+    strcpy(mesh, strrchr(file, '/') + 1);
+    *strrchr(mesh, '.') = '\0';
+    fprintf(fp, "%s\nFile generated by MeshInspector\n", mesh);
+    
+    count = 0;
+    ma    = 0;
+    mad   = cad = 0;
+    ddm   = 99999;
+    for (unsigned int i = 0; i < list->numNodes; i++) {
+        unsigned int firstA = 1;
+        node * cur = list->nodes[i];
+        
+        for (short j = 0; j < cur->neighbourCount; j++) {
+            node * cur2 = list->nodes[find_node(list, cur->neighbours[j])];
+            
+            for (short k = 0; k < cur->neighbourCount; k++) {
+                node * cur3 = list->nodes[find_node(list, cur->neighbours[k])];
+                unsigned int first = cur->neighbours[k];
+                
+                for (short l = 0; l < cur2->neighbourCount; l++) {
+                    if (k == l) continue;
+                    unsigned int second = cur2->neighbours[l];
+                    if (second == first) {
+                        // We have a winner
+                        double ca;
+                        if (polar) {
+                            ca = get_area_polar(list, cur->number, cur2->number, cur->neighbours[k]);
+                        } else {
+                            ca = get_area(list, cur->number, cur2->number, cur->neighbours[k]);
+                        }
+                        
+                        double deepest = cur->depth;
+                        if (cur2->depth > deepest) deepest = cur2->depth;
+                        if (cur3->depth > deepest) deepest = cur3->depth;
+                        if (deepest < cutoffValue) deepest = cutoffValue;
+                        cad = sqrt(ca/(9.8*deepest));
+                        
+                        double h1 = cur->depth;
+                        double h2 = cur2->depth;
+                        double h3 = cur3->depth;
+                        double min = fabs(h1);
+                        
+                        if (fabs(h2) < min) min = fabs(h2);
+                        if (fabs(h3) < min) min = fabs(h3);
+                        if (min < cutoffValue) min = cutoffValue;
+                        
+                        if (h1 < cutoffValue) h1 = cutoffValue;
+                        if (h2 < cutoffValue) h2 = cutoffValue;
+                        if (h3 < cutoffValue) h3 = cutoffValue;
+                        
+                        double dmin, dmax;
+                        if (min != 0) {
+                            double dh1 = fabs(h2 - h1)/min;
+                            double dh2 = fabs(h3 - h2)/min;
+                            double dh3 = fabs(h3 - h1)/min;
+                            
+                            dmax = dh1;
+                            if (dh2 > dmax) dmax = dh2;
+                            if (dh3 > dmax) dmax = dh3;
+                            
+                            dmin = dh1;
+                            if (dh2 < dmin) dmin = dh2;
+                            if (dh3 < dmin) dmin = dh3;
+                        }
+                        
+                        if (minMax) {
+                            if (ca < ma || firstA)    ma  = ca;
+                            if (cad < mad || firstA)  mad = cad;
+                            if (dmin < ddm || firstA) ddm = dmin;
+                        } else {
+                            if (ca > ma || firstA)    ma  = ca;
+                            if (cad > mad || firstA)  mad = cad;
+                            if (dmax > ddm || firstA) ddm = dmax;
+                        }
+                        firstA = 0;
+                    }
+                }
+            }
+        }
+        
+        switch (which) {
+            case EXPORT_AREA:
+                fprintf(fp, "%d\t%g\n", count++, ma);
+                break;
+            case EXPORT_D_T:
+                fprintf(fp, "%d\t%g\n", count++, mad);
+                break;
+            case EXPORT_D_H:
+                fprintf(fp, "%d\t%g\n", count++, ddm);
+                break;
+        }
+    }
+    fclose(fp);
+}
+
+void print_depth(nodelist * list, const char * file)
+{
+    char mesh[128];
+    int count = 0;
+    FILE * fp = fopen(file, "w");
+    if (!fp) return;
+    
+    strcpy(mesh, strrchr(file, '/') + 1);
+    *strrchr(mesh, '.') = '\0';
+    fprintf(fp, "%s\nFile generated by MeshInspector\n", mesh);
+    
+    for (unsigned int i = 0; i < list->numNodes; i++) {
+        node * cur = list->nodes[i];
+        fprintf(fp, "%d\t%g\n", count++, cur->depth);
+    }
+    fclose(fp);
+}
+
+void print_side(nodelist * list, int polar, int minMax, const char * file)
+{
+    char mesh[128];
+    int count = 0;
+    double mlen = 0.0;
+    FILE * fp = fopen(file, "w");
+    if (!fp) return;
+    
+    strcpy(mesh, strrchr(file, '/') + 1);
+    *strrchr(mesh, '.') = '\0';
+    fprintf(fp, "%s\nFile generated by MeshInspector\n", mesh);
+    
+    for (unsigned int i = 0; i < list->numNodes; i++) {
+        node * cur = list->nodes[i];
+        
+        for (short j = 0; j < cur->neighbourCount; j++) {
+            double curlen;
+            node * cur2 = list->nodes[find_node(list, cur->neighbours[j])];
+            
+            if (polar) {
+                double x1 = PIOVER180*(90 + cur->x);  double y1 = PIOVER180*(90 - cur->y);
+                double x2 = PIOVER180*(90 + cur2->x); double y2 = PIOVER180*(90 - cur2->y);
+                curlen = arc_length(y2, x2, y1, x1)*unitScale;
+            } else {
+                double x1 = cur->x*unitScale;  double y1 = cur->y*unitScale;
+                double x2 = cur2->x*unitScale; double y2 = cur2->y*unitScale;
+                curlen = sqrt((x2 - x1)*(x2 - x1)+(y2 - y1)*(y2 - y1));
+            }
+            if (minMax) {
+                if (curlen < mlen || j == 0) mlen = curlen;
+            } else {
+                if (curlen > mlen || j == 0) mlen = curlen;
+            }
+        }
+        fprintf(fp, "%d\t%g\n", count++, mlen);
+    }
+    fclose(fp);
 }
 

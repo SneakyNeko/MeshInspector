@@ -1,5 +1,6 @@
 #include <QObject>
 #include <QMap>
+#include <QMainWindow>
 #include <cstdlib>
 #include "NodeList.h"
 #include "Histogram.h"
