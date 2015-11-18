@@ -515,7 +515,8 @@ void print_general(nodelist * list, int polar, int minMax, int which, const char
                         if (h2 < cutoffValue) h2 = cutoffValue;
                         if (h3 < cutoffValue) h3 = cutoffValue;
                         
-                        double dmin, dmax;
+                        double dmin = 0;
+                        double dmax = 0;
                         if (min != 0) {
                             double dh1 = fabs(h2 - h1)/min;
                             double dh2 = fabs(h3 - h2)/min;
