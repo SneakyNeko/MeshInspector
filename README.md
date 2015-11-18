@@ -18,7 +18,7 @@ The present Version of MeshInspector was created by Tristan Losier tristan.losie
 
 * V1.0 ***gtk***
 * V2.0 ***Qt3***
-* V3.0 ***Qt4***
+* V3.0 ***Qt5***
 
 # Building
 In addition to a C++ compiler, MeshInspector requires the following libraries:
