@@ -11,7 +11,7 @@ class AppWindow : public QMainWindow
     
 public:
     AppWindow();
-    AppWindow(const QString & file);
+    void open(const QString file);
     
 public slots:
     void open();

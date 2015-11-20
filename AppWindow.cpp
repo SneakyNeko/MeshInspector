@@ -13,17 +13,6 @@ AppWindow::AppWindow() : QMainWindow()
     statusBar()->showMessage("No mesh loaded");
 }
 
-AppWindow::AppWindow(const QString & file) : QMainWindow()
-{
-    setWindowTitle("Mesh Inspector");
-    appData = new NodeList();
-    setupMenu();
-    setupAppTabs();
-    setWindowFilePath(file);
-    appData->loadFile(file);
-    statusBar()->showMessage(QString("Loaded mesh: %1").arg(file));
-}
-
 void AppWindow::setupMenu()
 {
     QMenu * fileMenu = new QMenu("&File", this);
@@ -102,6 +91,12 @@ void AppWindow::open()
     QString file = QFileDialog::getOpenFileName(this, "Open Mesh",
                                             windowFilePath(),
                                             NodeList::fileFilter);
+    open(file);
+}
+
+void AppWindow::open(const QString file)
+{
+    if (file.isEmpty()) return;
     setWindowFilePath(file);
     appData->loadFile(file);
     statusBar()->showMessage(QString("Loaded mesh: %1").arg(file));

@@ -4,14 +4,11 @@
 int main(int argc, char ** argv)
 {
     QApplication app(argc,argv);
-    AppWindow * window;
+    AppWindow * window = new AppWindow();
     
-    if (argc >= 2)
-        window = new AppWindow(argv[1]);
-    else
-        window = new AppWindow();
-
+    if (argc >= 2) window->open(argv[2]);
     window->show();
+    
     return app.exec();
 }
 
