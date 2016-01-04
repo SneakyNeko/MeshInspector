@@ -4,6 +4,8 @@
 #include "StatsTable.h"
 #include "MeshView.h"
 
+#include <stdio.h>
+
 AppWindow::AppWindow() : QMainWindow()
 {
     setWindowTitle("Mesh Inspector");
@@ -97,9 +99,11 @@ void AppWindow::open()
 void AppWindow::open(const QString file)
 {
     if (file.isEmpty()) return;
-    setWindowFilePath(file);
-    appData->loadFile(file);
-    statusBar()->showMessage(QString("Loaded mesh: %1").arg(file));
+    QDir path(file);
+    
+    setWindowFilePath(path.absolutePath());
+    appData->loadFile(path.absolutePath());
+    statusBar()->showMessage(QString("Loaded mesh: %1").arg(path.absolutePath()));
 }
 
 void AppWindow::save()
