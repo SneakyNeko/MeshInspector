@@ -6,7 +6,7 @@ int main(int argc, char ** argv)
     QApplication app(argc,argv);
     AppWindow * window = new AppWindow();
     
-    if (argc >= 2) window->open(argv[2]);
+    if (argc >= 2) window->open(argv[1]);
     window->show();
     
     return app.exec();
