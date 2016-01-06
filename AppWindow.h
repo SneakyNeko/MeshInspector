@@ -3,7 +3,9 @@
 
 #include <QMainWindow>
 #include <QAction>
+#include <QScrollArea>
 #include "NodeList.h"
+#include "MeshView.h"
 
 class AppWindow : public QMainWindow
 {
@@ -27,10 +29,21 @@ public slots:
     void saveMinLength();
     void saveMinDH();
     void saveMinDT();
+    void zoomIn();
+    void zoomOut();
+    void zoomNormal();
+    void zoomWindow(bool fixed);
     
 private:
     NodeList * appData;
     QAction * polarStats;
+    QScrollArea * meshScrollArea;
+    MeshView * meshPlot;
+    qreal meshScale;
+    
+    QAction * zoomOutAct;
+    QAction * zoomInAct;
+    QAction * zoomNormalAct;
     
     void setupMenu();
     void setupAppTabs();

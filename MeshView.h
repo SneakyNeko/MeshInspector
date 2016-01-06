@@ -16,6 +16,8 @@ public:
     
     QSize sizeHint() const Q_DECL_OVERRIDE;
     void setModel(NodeList * nodes);
+    void setFitToWindow(bool fit);
+    bool fitToWindow();
     
 public slots:
     void updateData();
@@ -29,6 +31,7 @@ private:
     QPolygon islandNodes;
     QVector<QLine> lineVect;
     NodeList * model;
+    QRect meshRect;
 };
 
 #endif /* defined(__meshinspect__MeshView__) */

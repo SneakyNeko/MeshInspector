@@ -19,7 +19,7 @@ MeshView::MeshView(QWidget * parent) : QWidget(parent)
 
 QSize MeshView::sizeHint() const
 {
-    return QSize(400, 400);
+    return QSize(450, 450);
 }
 
 void MeshView::setModel(NodeList * nodes)
@@ -57,6 +57,11 @@ void MeshView::updateData()
         else if (n->type == NOD_ISLAND) islandNodes.append(nodePoly[n->number]);
     }
     
+    meshRect = nodePoly.boundingRect();
+    int meshSize = qMax(size().width(), size().height());
+    int margin = 10.0*(qreal)qMax(meshRect.width(), meshRect.height())/(qreal)meshSize;
+    meshRect += QMargins(margin, margin, margin, margin);
+    
     update();
 }
 
@@ -64,13 +69,10 @@ void MeshView::paintEvent(QPaintEvent * event)
 {
     if (nodePoly.isEmpty()) return;
     
-    const QRect viewRect = event->rect();
-    const QRect meshRect = nodePoly.boundingRect();
-
-    qreal side = qMin(viewRect.width(), viewRect.height());
-    qreal scaleVal = side/(qreal)qMax(meshRect.width(), meshRect.height());
-    qreal tx = (qreal)viewRect.width()/2.0 - (qreal)meshRect.center().x()*scaleVal;
-    qreal ty = (qreal)viewRect.height()/2.0 + (qreal)meshRect.center().y()*scaleVal;
+    int meshSize = qMin(size().width(), size().height());
+    qreal scaleVal = meshSize/(qreal)qMax(meshRect.width(), meshRect.height());
+    qreal tx = (qreal)size().width()/2.0 - (qreal)meshRect.center().x()*scaleVal;
+    qreal ty = (qreal)size().height()/2.0 + (qreal)meshRect.center().y()*scaleVal;
     qreal sx = scaleVal;
     qreal sy = -1.0*scaleVal;
     

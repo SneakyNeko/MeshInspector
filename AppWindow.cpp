@@ -4,8 +4,6 @@
 #include "StatsTable.h"
 #include "MeshView.h"
 
-#include <stdio.h>
-
 AppWindow::AppWindow() : QMainWindow()
 {
     setWindowTitle("Mesh Inspector");
@@ -20,6 +18,7 @@ void AppWindow::setupMenu()
     QMenu * fileMenu = new QMenu("&File", this);
     QMenu * prefMenu = new QMenu("&Preferences", this);
     QMenu * statMenu = new QMenu("&Export Stats", this);
+    QMenu * viewMenu = new QMenu("&Mesh View", this);
     
     fileMenu->addAction("&Open...", this, SLOT (open()), QKeySequence::Open);
     fileMenu->addAction("&Save", this, SLOT (save()), QKeySequence::Save);
@@ -44,10 +43,17 @@ void AppWindow::setupMenu()
     statMenu->addAction("Save min side lengths", this, SLOT (saveMinLength()));
     statMenu->addAction("Save min dh/h", this, SLOT (saveMinDH()));
     statMenu->addAction("Save min dt", this, SLOT (saveMinDT()));
- 
+    
+    zoomOutAct    = viewMenu->addAction("&Zoom out", this, SLOT (zoomOut()));
+    zoomInAct     = viewMenu->addAction("Zoom &in", this, SLOT (zoomIn()));
+    zoomNormalAct = viewMenu->addAction("&Normal size", this, SLOT (zoomNormal()));
+    viewMenu->addSeparator();
+    viewMenu->addAction("&Fit to window", this, SLOT (zoomWindow(bool)))->setCheckable(true);
+    
     menuBar()->addMenu(fileMenu);
     menuBar()->addMenu(prefMenu);
     menuBar()->addMenu(statMenu);
+    menuBar()->addMenu(viewMenu);
 }
 
 void AppWindow::setupAppTabs()
@@ -81,9 +87,12 @@ void AppWindow::setupAppTabs()
         connect(appData, SIGNAL (listUpdated()), table, SLOT (reset()));
     }
     
-    MeshView * mesh = new MeshView(widget);
-    mesh->setModel(appData);
-    widget->addTab(mesh, "Map");
+    meshPlot = new MeshView();
+    meshPlot->setModel(appData);
+    meshScrollArea = new QScrollArea(widget);
+    meshScrollArea->setWidget(meshPlot);
+    meshScrollArea->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+    widget->addTab(meshScrollArea, "Map");
     
     setCentralWidget(widget);
 }
@@ -104,6 +113,7 @@ void AppWindow::open(const QString file)
     setWindowFilePath(path.absolutePath());
     appData->loadFile(path.absolutePath());
     statusBar()->showMessage(QString("Loaded mesh: %1").arg(path.absolutePath()));
+    meshScale = 1.0;
 }
 
 void AppWindow::save()
@@ -224,5 +234,32 @@ void AppWindow::saveMinDT()
     file.chop(4);
     file.append("_min_delta_t.s2r");
     print_general(appData->data(), polarStats->isChecked(), 1, EXPORT_D_T, qPrintable(file));
+}
+
+void AppWindow::zoomIn()
+{
+    meshScale *= 1.25;
+    meshPlot->resize(meshScale * meshPlot->sizeHint());
+}
+
+void AppWindow::zoomOut()
+{
+    meshScale *= 0.8;
+    meshPlot->resize(meshScale * meshPlot->sizeHint());
+}
+
+void AppWindow::zoomNormal()
+{
+    meshScale = 1.0;
+    meshPlot->resize(meshPlot->sizeHint());
+}
+
+void AppWindow::zoomWindow(bool fixed)
+{
+    meshScrollArea->setWidgetResizable(fixed);
+    zoomOutAct->setEnabled(!fixed);
+    zoomInAct->setEnabled(!fixed);
+    zoomNormalAct->setEnabled(!fixed);
+    if (!fixed) zoomNormal();
 }
 
