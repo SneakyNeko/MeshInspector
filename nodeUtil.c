@@ -52,18 +52,26 @@ void project(nodelist * nlist)
 {
     // Initialize the projection
     projPJ pj_latlong = pj_init_plus("+proj=latlong");
-    projPJ pj_lcc = pj_init_plus(nlist->proj);
-    if (pj_latlong == NULL || pj_lcc == NULL) panic("Failed to create coordinate projection", 101);
+    projPJ pj_lcc     = pj_init_plus(nlist->proj);
+    if (pj_latlong == NULL || pj_lcc == NULL) {
+        int pj_errno = *pj_get_errno_ref();
+        printf("Projection error %d: %s\n", pj_errno, pj_strerrno(pj_errno));
+        panic("Failed to create coordinate projection", 101);
+    }
     
     // Perform the projection
     for (unsigned int i = 0; i < nlist->numNodes; i++) {
         node * cur = nlist->nodes[i];
-        cur->lon = cur->x;
-        cur->lat = cur->y;
-        cur->x *= DEG_TO_RAD;
-        cur->y *= DEG_TO_RAD;
+        cur->lon   = cur->x;
+        cur->lat   = cur->y;
+        cur->x    *= DEG_TO_RAD;
+        cur->y    *= DEG_TO_RAD;
         pj_transform(pj_latlong, pj_lcc, 1, 1, &cur->x, &cur->y, NULL);
     }
+    
+    // Clean up
+    pj_free(pj_latlong);
+    pj_free(pj_lcc);
 }
 
 void freeList(nodelist * nlist)
