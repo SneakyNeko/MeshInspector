@@ -10,7 +10,7 @@ static const char out_of_memory[] = "Out of memory!";
 static const char open_file[] = "Couldn't open file!";
 static const char read_file[] = "Invallid mesh!";
 
-static const char projFormat[] = "+proj=lcc +lon_0=%0.4f +lat_0=%0.4f +lat_1=%0.2f +lat_2=%0.2f";
+static const char projFormat[] = "+proj=lcc +lon_0=%0.4f +lat_0=%0.4f +lat_1=%0.2f +lat_2=%0.2f +ellps=WGS84";
 
 int maxNei;
 
