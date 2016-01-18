@@ -51,7 +51,7 @@ void guess_proj(nodelist * nlist)
 void project(nodelist * nlist)
 {
     // Initialize the projection
-    projPJ pj_latlong = pj_init_plus("+proj=latlong");
+    projPJ pj_latlong = pj_init_plus("+proj=latlong +ellps=WGS84");
     projPJ pj_lcc     = pj_init_plus(nlist->proj);
     if (pj_latlong == NULL || pj_lcc == NULL) {
         int pj_errno = *pj_get_errno_ref();
