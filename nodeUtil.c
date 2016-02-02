@@ -51,14 +51,17 @@ void guess_proj(nodelist * nlist)
 void project(nodelist * nlist)
 {
     // Initialize the projection
-    projPJ pj_latlong = pj_init_plus("+proj=latlong +ellps=WGS84");
-    projPJ pj_lcc     = pj_init_plus(nlist->proj);
-    if (pj_latlong == NULL || pj_lcc == NULL) {
-        int pj_errno = *pj_get_errno_ref();
-        printf("Projection error %d: %s\n", pj_errno, pj_strerrno(pj_errno));
+    projPJ pj_lcc = pj_init_plus(nlist->proj);
+    if (pj_lcc == NULL) {
         panic("Failed to create coordinate projection", 101);
+        printf("Error: %s\n", pj_strerrno(*pj_get_errno_ref()));
     }
-    
+    projPJ pj_latlong = pj_latlong_from_proj(pj_lcc);
+    if (pj_latlong == NULL) {
+        panic("Failed to create coordinate projection", 101);
+        printf("Error: %s\n", pj_strerrno(*pj_get_errno_ref()));
+    }
+
     // Perform the projection
     for (unsigned int i = 0; i < nlist->numNodes; i++) {
         node * cur = nlist->nodes[i];
