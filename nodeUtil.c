@@ -39,11 +39,17 @@ void guess_proj(nodelist * nlist)
     if (xmax - xmin <= 360.0 && ymax - ymin <= 360.0) { // Is the input data in spherical units? (guess)
         // Build a projection refrence string, guessing relevent parameters to fit the input data
         char projTmp[80];
-        sprintf(projTmp, projFormat, (xmax - xmin)/2 + xmin, (ymax - ymin)/2 + ymin, ymin, ymax);
-        char * projRef = malloc(strlen(projTmp) + 1);
+        char * projRef;
+        double xc, yc, l1, l2;
+        
+        xc = (xmax - xmin)/2.0 + xmin;
+        yc = (ymax - ymin)/2.0 + ymin;
+        l1 = yc - (ymax - ymin)*2.0/6.0;
+        l2 = yc + (ymax - ymin)*2.0/6.0;
+        sprintf(projTmp, projFormat, xc, yc, l1, l2);
+        projRef = malloc(strlen(projTmp) + 1);
         if (projRef == NULL) panic(out_of_memory, 100);
         nlist->proj = strcpy(projRef, projTmp);
-        
         project(nlist);
     }
 }
