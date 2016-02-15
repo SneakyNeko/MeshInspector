@@ -38,7 +38,7 @@ void guess_proj(nodelist * nlist)
     
     if (xmax - xmin <= 360.0 && ymax - ymin <= 360.0) { // Is the input data in spherical units? (guess)
         // Build a projection refrence string, guessing relevent parameters to fit the input data
-        char projTmp[80];
+        char projTmp[90];
         char * projRef;
         double xc, yc, l1, l2;
         
