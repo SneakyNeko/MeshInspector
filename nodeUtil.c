@@ -224,7 +224,7 @@ void fix_boundaries(nodelist * nlist)
                 s[segSize-1].n2    = cur2->number;
                 s[segSize-1].index = 0;
             }
-            if (m < 1) panic("Miscellaneous unhelpful error message!", 60);
+            if (m < 1) panic("Error fixing boundaries!\n", 60);
         }
     }
     
@@ -294,35 +294,13 @@ void fix_boundaries(nodelist * nlist)
     free(s);
 }
 
-void fix_connections(nodelist * nlist, const char * file)
+void fix_connections(nodelist * nlist, triangle * tlist, int n)
 {
-    FILE * ele;
-    int result, n;
-    int tn, n1, n2, n3;
-    triangle * tlist = NULL;
-    
-    ele = fopen(file, "r");
-    if (!ele) panic(open_file, 25);
-    
-    n = 0;
-    while (1) {
-        result = fscanf(ele, "%d %d %d %d", &tn, &n1, &n2, &n3);
-        if (result == EOF) break;
-        tlist = realloc(tlist, sizeof(triangle)*(n + 1));
-        if (!tlist) panic(out_of_memory, 30);
-        tlist[n].n1 = n1;
-        tlist[n].n2 = n2;
-        tlist[n].n3 = n3;
-        n++;
-    }
-    fclose(ele);
-    
     for (int i = 0; i < n; i++) {
         add_connection(nlist, tlist[i].n2, tlist[i].n3);
         add_connection(nlist, tlist[i].n1, tlist[i].n3);
         add_connection(nlist, tlist[i].n1, tlist[i].n2);
     }
-    free(tlist);
     
     // do a sanity check
     for (unsigned int i = 0; i < nlist->numNodes; i++) {
@@ -333,9 +311,6 @@ void fix_connections(nodelist * nlist, const char * file)
             panic("Busted mesh 2!", i);
         }
     }
-    
-    reorder_nodes(nlist);
-    fix_boundaries(nlist);
 }
 
 nodelist * read_nei(const char * file)
@@ -356,23 +331,24 @@ nodelist * read_nei(const char * file)
     if (in == NULL) panic(open_file, 1);
     nlist = newList();
     if (!nlist) panic(out_of_memory, 2);
-
+    
     // Read in header
-    result = fscanf(in, "%d \n", &total);
+    result = fscanf(in, " %d \n", &total);
     if (result == EOF) panic(read_file, 4);
-    result = fscanf(in, "%d \n", &maxNei);
+    result = fscanf(in, " %d \n", &maxNei);
     if (result == EOF) panic(read_file, 4);
-    result = fscanf(in, "%lf %lf %lf %lf \n", &xmax, &ymax, &xmin, &ymin);
+    result = fscanf(in, " %lf %lf %lf %lf \n", &xmax, &ymax, &xmin, &ymin);
     if (result == EOF) panic(read_file, 4);
     
+    // Read in node data
     nei = malloc(sizeof(int)*maxNei);
     if (!nei) panic(out_of_memory, 1);
     while (1) {
-        result = fscanf(in, "%d %lf %lf %d %lf", &nm, &x, &y, &type, &z);
+        result = fscanf(in, " %d %lf %lf %d %lf ", &nm, &x, &y, &type, &z);
         if (result == EOF) break;
         numNei = 0;
         for (int i = 0; i < maxNei; i++) {
-            result = fscanf(in, "%d", &(nei[i]));
+            result = fscanf(in, " %d ", &(nei[i]));
             if (result == EOF) break;
             if (nei[i] != 0 && nei[i] != nm) numNei++;
         }
@@ -390,11 +366,9 @@ nodelist * read_nei(const char * file)
             if (nei[i] != 0 && nei[i] != nm) temp->neighbours[j++] = nei[i];
         if (addNode(temp, nlist)) panic(out_of_memory, 4);
     }
+    
     free(nei);
     fclose(in);
-    
-    guess_proj(nlist);
-    
     return(nlist);
 }
 
@@ -443,12 +417,85 @@ void write_nei(nodelist * nlist, const char * file)
     fclose(f);
 }
 
+nodelist * read_dat(const char * file)
+{
+    FILE * in;
+    nodelist * nlist;
+    triangle * tlist;
+    unsigned int nodes, elems;
+    int result;
+    
+    in = fopen(file, "r");
+    if (in == NULL) panic(open_file, 1);
+    nlist = newList();
+    if (!nlist) panic(out_of_memory, 2);
+    
+    // Read in header
+    result = fscanf(in, "Node Number = %u \n", &nodes);
+    if (result == EOF) panic(read_file, 4);
+    result = fscanf(in, "Cell Number = %u \n", &elems);
+    if (result == EOF) panic(read_file, 4);
+    
+    // Read in elements
+    tlist = malloc(sizeof(triangle)*elems);
+    if (!tlist) panic(out_of_memory, 5);
+    for (unsigned int i = 0; i < elems; i++) {
+        unsigned int n, n1, n2, n3;
+        
+        result = fscanf(in, "%u %u %u %u ", &n, &n1, &n2, &n3);
+        if (result == EOF) break;
+        
+        tlist[i].n1 = n1;
+        tlist[i].n2 = n2;
+        tlist[i].n3 = n3;
+    }
+    
+    // Read in nodes
+    for (unsigned int i = 0; i < nodes; i++) {
+        unsigned int n;
+        double x, y;
+        node * temp;
+        
+        result = fscanf(in, "%d %lf %lf ", &n, &x, &y);
+        if (result == EOF) break;
+        temp = malloc(sizeof(node));
+        if (!temp) panic(out_of_memory, 3);
+        
+        temp->number         = n;
+        temp->type           = NOD_UNKNOWN;
+        temp->x              = x;
+        temp->y              = y;
+        temp->depth          = 0.0;
+        temp->neighbourCount = 0;
+        temp->neighbours     = NULL;
+        if (addNode(temp, nlist)) panic(out_of_memory, 4);
+    }
+    
+    fix_connections(nlist, tlist, elems);
+    
+    fclose(in);
+    free(tlist);
+    return(nlist);
+}
+
+void write_dat(nodelist * nlist, const char * file)
+{
+    FILE * fp = fopen(file, "w");
+    if (!fp) panic(open_file, 10);
+    
+    fprintf(fp, "Node Number = %d\n", nlist->numNodes);
+    fprintf(fp, "Cell Number = %d\n", nlist->numElems);
+    write_ele(nlist, fp);
+    write_nod(nlist, fp);
+    
+    fclose(fp);
+}
+
 nodelist * read_neb(const char * filestub)
 {
-    FILE * nod, * bat;
+    FILE * nod, * bat, * ele;
     nodelist * nlist;
-    int n1, n2;
-    double x, y, z;
+    triangle * tlist = NULL;
     char filename[256];
     
     nlist = newList();
@@ -460,11 +507,15 @@ nodelist * read_neb(const char * filestub)
     strcpy(filename, filestub);
     strcat(filename, ".bat");
     bat = fopen(filename, "r");
-    if (!(nod && bat)) panic(open_file, 20);
+    strcpy(filename, filestub);
+    strcat(filename, ".ele");
+    ele = fopen(filename, "r");
+    if (!(nod && bat && ele)) panic(open_file, 20);
     
-    // First, create the nodes from the .nod and .bat files,
-    // the connections will be delt with after
+    // Read in node positions and depths
     while(1) {
+        double x, y, z;
+        int n1, n2;
         int result = fscanf(nod, "%d %lf %lf", &n1, &x, &y);
         if (result == EOF) break;
         result = fscanf(bat, "%d %lf", &n2, &z);
@@ -484,11 +535,27 @@ nodelist * read_neb(const char * filestub)
         if (addNode(temp, nlist)) panic(out_of_memory, 23);		
     }
     
-    strcpy(filename, filestub);
-    strcat(filename, ".ele");
-    fix_connections(nlist, filename);
-    guess_proj(nlist);
+    // Read in element connections
+    int n = 0;
+    while (1) {
+        int n, n1, n2, n3;
+        int result = fscanf(ele, "%d %d %d %d", &n, &n1, &n2, &n3);
+        if (result == EOF) break;
+        
+        tlist = realloc(tlist, sizeof(triangle)*(n + 1));
+        if (!tlist) panic(out_of_memory, 30);
+        
+        tlist[n].n1 = n1;
+        tlist[n].n2 = n2;
+        tlist[n].n3 = n3;
+        n++;
+    }
     
+    fix_connections(nlist, tlist, n - 1);
+    
+    fclose(nod);
+    fclose(ele);
+    fclose(bat);
     return(nlist);
 }
 

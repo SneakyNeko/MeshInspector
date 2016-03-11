@@ -116,10 +116,7 @@ void generate_histogram(int which, double max, double min, double value, int ** 
     
     strides[which] = (max - min)/499;
     num = ((value - min)/strides[which]);
-    if (num < 0 || num > 499) {
-        printf("Warning: screwed up histogram (num==%d)\n", num);
-        return;
-    }
+    if (num < 0 || num > 499) return;
     histData[which][num] += 1;
 }
 
@@ -335,6 +332,7 @@ void boundary_stats(nodelist * list, int ** histData, double ** stats, int polar
             }
         }
     }
+    list->numElems = areacount;
     
     max  = min = areas[0];
     mean = 0;

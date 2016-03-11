@@ -9,7 +9,7 @@ extern "C" {
     #include "nodeUtil.h"
 }
 
-const QString NodeList::fileFilter = "Neighbor File (*.nei);;Split Files(*.nod *.ele *.bat);;All Files (*.*)";
+const QString NodeList::fileFilter = "Neighbor File (*.nei);;FVCOM Grid (*.dat);;Split Files (*.nod *.ele *.bat);;All Files (*.*)";
 
 NodeList::NodeList()
 {
@@ -66,6 +66,8 @@ void NodeList::loadFile(const QString file)
     
     if (file.endsWith(".nei", Qt::CaseInsensitive))
         nodes = read_nei(qPrintable(file));
+    else if (file.endsWith(".dat", Qt::CaseInsensitive))
+        nodes = read_dat(qPrintable(file));
     else if ( file.endsWith(".ele", Qt::CaseInsensitive)
            || file.endsWith(".bat", Qt::CaseInsensitive)
            || file.endsWith(".nod", Qt::CaseInsensitive) ) {
@@ -74,6 +76,7 @@ void NodeList::loadFile(const QString file)
         nodes = read_neb(qPrintable(fileStub));
     } else return;
     
+    guess_proj(nodes);
     reorder_nodes(nodes);
     fix_boundaries(nodes);
     boundary_stats(nodes, histData, stats, 0);
@@ -86,8 +89,10 @@ void NodeList::saveFile(const QString file)
 {
     if (file.isEmpty())
         return;
-    else if ( file.endsWith(".nei", Qt::CaseInsensitive) )
+    else if (file.endsWith(".nei", Qt::CaseInsensitive))
         write_nei(nodes, qPrintable(file));
+    else if (file.endsWith(".dat", Qt::CaseInsensitive))
+        write_dat(nodes, qPrintable(file));
     else if ( file.endsWith(".ele", Qt::CaseInsensitive)
            || file.endsWith(".bat", Qt::CaseInsensitive)
            || file.endsWith(".nod", Qt::CaseInsensitive) ) {

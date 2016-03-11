@@ -30,6 +30,7 @@ typedef struct _node {
 
 typedef struct _nodelist {
     unsigned int numNodes;
+    unsigned int numElems;
     node **      nodes;
     char *       proj;
 } nodelist;
@@ -54,6 +55,8 @@ void project(nodelist * nlist);
 nodelist * newList(void);
 int addNode(node * n, nodelist * list);
 nodelist * read_nei(const char * file);
+nodelist * read_dat(const char * file);
+void write_dat(nodelist * nlist, const char * file);
 void write_nod(nodelist * list, FILE * f);
 int find_node(nodelist * list, unsigned int num);
 void write_ele(nodelist * list, FILE * f);
@@ -62,7 +65,7 @@ void write_neb(nodelist * list, const char * filestub);
 void add_connection(nodelist * nlist, unsigned int n1, unsigned int n2);
 void reorder_nodes(nodelist * nlist);
 void fix_boundaries(nodelist * nlist);
-void fix_connections(nodelist * nlist, const char * file);
+void fix_connections(nodelist * nlist, triangle * tlist, int n);
 nodelist * read_neb(const char * filestub);
 void write_nei(nodelist * nlist, const char * file);
 void freeList(nodelist * plist);
