@@ -52,7 +52,7 @@ QVector<QBrush> MeshView::depthMesh(nodelist * nlist, triangle ** ele, unsigned 
         if (min != max)
             a = (int)(255.0*(depths[i] - min)/(max - min));
         else
-            a = 0;
+            a = max > 0.0 ? 255 : 0;
         col.setAlpha(a);
         vect[i] = QBrush(col);
     }
