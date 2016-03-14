@@ -473,22 +473,40 @@ void write_nei(nodelist * nlist, const char * file)
 
 nodelist * read_dat(const char * file)
 {
-    FILE * in;
+    FILE * in, * dep;
     nodelist * nlist;
     triangle * tlist;
     unsigned int nodes, elems;
-    int result;
+    int result, flen;
+    char * f;
     
-    in = fopen(file, "r");
-    if (in == NULL) panic(open_file, 1);
+    flen = strlen(file);
+    f = malloc(flen + 1);
+    if (!f) panic(out_of_memory, 1);
+    strcpy(f, file);
+    in = fopen(f, "r");
+    if (in == NULL) panic(open_file, 2);
+    f[flen - 7] = 'd';
+    f[flen - 6] = 'e';
+    f[flen - 5] = 'p';
+    dep = fopen(f, "r");
+    free(f);
     nlist = newList();
-    if (!nlist) panic(out_of_memory, 2);
+    if (!nlist) panic(out_of_memory, 3);
     
     // Read in header
     result = fscanf(in, "Node Number = %u \n", &nodes);
     if (result == EOF) panic(read_file, 4);
     result = fscanf(in, "Cell Number = %u \n", &elems);
     if (result == EOF) panic(read_file, 4);
+    if (dep) {
+        unsigned int n;
+        result = fscanf(dep, "Node Number = %u \n", &n);
+        if (result == EOF || n != nodes) {
+            fclose(dep);
+            dep = NULL;
+        }
+    }
     
     // Read in elements
     tlist = malloc(sizeof(triangle)*elems);
@@ -496,7 +514,7 @@ nodelist * read_dat(const char * file)
     for (unsigned int i = 0; i < elems; i++) {
         unsigned int n, n1, n2, n3;
         
-        result = fscanf(in, "%u %u %u %u ", &n, &n1, &n2, &n3);
+        result = fscanf(in, "%u %u %u %u", &n, &n1, &n2, &n3);
         if (result == EOF) break;
         
         tlist[i].n1 = n1;
@@ -507,19 +525,21 @@ nodelist * read_dat(const char * file)
     // Read in nodes
     for (unsigned int i = 0; i < nodes; i++) {
         unsigned int n;
-        double x, y;
+        double x, y, depth;
         node * temp;
         
-        result = fscanf(in, "%d %lf %lf ", &n, &x, &y);
+        result = fscanf(in, "%d %lf %lf", &n, &x, &y);
         if (result == EOF) break;
         temp = malloc(sizeof(node));
         if (!temp) panic(out_of_memory, 3);
+        depth = 0.0;
+        if (dep) result = fscanf(dep, "%*f %*f %lf", &depth);
         
         temp->number         = n;
         temp->type           = NOD_UNKNOWN;
         temp->x              = x;
         temp->y              = y;
-        temp->depth          = 0.0;
+        temp->depth          = depth;
         temp->neighbourCount = 0;
         temp->neighbours     = NULL;
         if (addNode(temp, nlist)) panic(out_of_memory, 4);
@@ -528,6 +548,7 @@ nodelist * read_dat(const char * file)
     fix_connections(nlist, tlist, elems);
     
     fclose(in);
+    if (dep) fclose(dep);
     free(tlist);
     return(nlist);
 }
