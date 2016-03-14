@@ -69,7 +69,9 @@ void fix_connections(nodelist * nlist, triangle * tlist, int n);
 nodelist * read_neb(const char * filestub);
 void write_nei(nodelist * nlist, const char * file);
 void freeList(nodelist * plist);
+triangle ** get_elements(nodelist * list, unsigned int * count);
 
+double get_depth(nodelist * nlist, triangle * ele);
 double get_area(nodelist * nlist, int n1, int n2, int n3);
 double arc_length(double theta1, double phi1, double theta2, double phi2);
 double get_area_polar(nodelist * nlist, int n1, int n2, int n3);

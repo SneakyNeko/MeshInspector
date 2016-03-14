@@ -5,6 +5,7 @@
 #include <QPolygon>
 #include <QVector>
 #include <QLine>
+#include <QPicture>
 #include "NodeList.h"
 
 class MeshView : public QWidget
@@ -14,6 +15,7 @@ class MeshView : public QWidget
 public:
     MeshView(QWidget * parent = 0);
     
+    QVector<QBrush> depthMesh(nodelist * nlist, triangle ** ele, unsigned int nele);
     QSize sizeHint() const Q_DECL_OVERRIDE;
     void setModel(NodeList * nodes);
     void setFitToWindow(bool fit);
@@ -29,9 +31,9 @@ private:
     QPolygon nodePoly;
     QPolygon boundNodes;
     QPolygon islandNodes;
-    QVector<QLine> lineVect;
     NodeList * model;
     QRect meshRect;
+    QPicture depthPic;
 };
 
 #endif /* defined(__meshinspect__MeshView__) */

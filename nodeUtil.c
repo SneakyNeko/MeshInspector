@@ -313,6 +313,60 @@ void fix_connections(nodelist * nlist, triangle * tlist, int n)
     }
 }
 
+triangle ** get_elements(nodelist * list, unsigned int * count)
+{
+    int      counter = 0;
+    triangle ** elems = NULL;
+    
+    for (unsigned int i = 0; i < list->numNodes; i++) {
+        node * cur = list->nodes[i];
+        short  idx = cur->neighbourCount;
+        
+        for (short j = 0; j < idx; j++) {
+            if (cur->neighbours[j] <= cur->number) continue;
+            node * cur2 = list->nodes[find_node(list, cur->neighbours[j])];
+            short  idx2 = cur2->neighbourCount;
+            
+            for (short k = 0; k < idx2; k++) {
+                for (short l = 0; l < idx; l++) {
+                    unsigned int a, b;
+                    a = cur2->neighbours[k];
+                    b = cur->neighbours[l];
+                    if (a == b && a != cur->number && b != cur2->number && a > cur->number && a > cur2->number) {
+                        int first, second, temp;
+                        
+                        if (j < l) {
+                            first = j;
+                            second = l;
+                        } else {
+                            first = l;
+                            second = j;
+                        }
+                        if ((j == 0 && l == cur->neighbourCount - 1) || (l == 0 && j == cur->neighbourCount - 1)) {
+                            temp = first;
+                            first = second;
+                            second = temp;
+                        }
+                        
+                        triangle * t = malloc(sizeof(triangle));
+                        if (!t) panic(out_of_memory, 67);
+                        t->n1 = cur->number;
+                        t->n2 = cur->neighbours[first];
+                        t->n3 = cur->neighbours[second];
+                        elems = realloc(elems, sizeof(void *)*(counter + 1));
+                        if (!elems) panic(out_of_memory, 68);
+                        elems[counter] = t;
+                        counter++;
+                    }
+                }
+            }
+        }
+    }
+    
+    *count = counter;
+    return elems;
+}
+
 nodelist * read_nei(const char * file)
 {
     FILE * in;
@@ -588,38 +642,12 @@ void write_neb(nodelist * list, const char * filestub)
 
 void write_ele(nodelist * list, FILE * f)
 {
-    int counter = 1;
-    for (unsigned int i = 0; i < list->numNodes; i++) {
-        node * cur = list->nodes[i];
-        short idx = cur->neighbourCount;
-        for (short j = 0; j < idx; j++) {
-            if (cur->neighbours[j] <= cur->number) continue;
-            node * cur2 = list->nodes[find_node(list, cur->neighbours[j])];
-            short idx2 = cur2->neighbourCount;
-            for (short k = 0; k < idx2; k++) {
-                for (short l = 0; l < idx; l++) {
-                    unsigned int a, b;
-                    a = cur2->neighbours[k];
-                    b = cur->neighbours[l];
-                    if (a == b && a != cur->number && b != cur2->number && a > cur->number && a > cur2->number) {
-                        int first, second, temp;
-                        if ( j<l ) {
-                            first = j;
-                            second = l;
-                        } else {
-                            first = l;
-                            second = j;
-                        }
-                        if ((j == 0 && l == cur->neighbourCount - 1) || (l == 0 && j == cur->neighbourCount - 1)) {
-                            temp = first;
-                            first = second;
-                            second = temp;
-                        }
-                        fprintf(f, "%7d %7d %7d %7d\n", counter++, cur->number, cur->neighbours[first], cur->neighbours[second]);
-                    }
-                }
-            }
-        }
+    unsigned int count;
+    triangle ** elems = get_elements(list, &count);
+    
+    for (unsigned int i = 0; i < count; i++) {
+        triangle * t = elems[i];
+        fprintf(f, "%7d %7d %7d %7d\n", i + 1, t->n1, t->n2, t->n3);
     }
 }
 

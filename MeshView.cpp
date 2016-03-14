@@ -5,9 +5,10 @@
 #include <QPaintEvent>
 #include <QRect>
 #include <QPainter>
+#include <QPicture>
 #include "MeshView.h"
 #include "NodeList.h"
-
+#include <stdio.h>
 extern "C" {
     #include "nodeUtil.h"
 }
@@ -29,13 +30,40 @@ void MeshView::setModel(NodeList * nodes)
     updateData();
 }
 
+QVector<QBrush> MeshView::depthMesh(nodelist * nlist, triangle ** ele, unsigned int nele)
+{
+    double depths[nele];
+    double min, max;
+    
+    depths[0] = get_depth(nlist, ele[0]);
+    min = max = depths[0];
+    for (unsigned int i = 0; i < nele; i++) {
+        depths[i] = get_depth(nlist, ele[i]);
+        if (depths[i] > max)
+            max = depths[i];
+        else if (depths[i] < min)
+            min = depths[i];
+    }
+    
+    QColor col("mediumslateblue");
+    QVector<QBrush> vect(nele);
+    for (unsigned int i = 0; i < nele; i++) {
+        int a;
+        if (min != max)
+            a = (int)(255.0*(depths[i] - min)/(max - min));
+        else
+            a = 0;
+        col.setAlpha(a);
+        vect[i] = QBrush(col);
+    }
+    return vect;
+}
+
 void MeshView::updateData()
 {
     nodelist * nlist = model->data();
     if (nlist == NULL) return;
-    
     nodePoly.resize(nlist->numNodes);
-    lineVect.clear();
     boundNodes.clear();
     islandNodes.clear();
     
@@ -46,16 +74,31 @@ void MeshView::updateData()
     
     for (unsigned int i = 0; i < nlist->numNodes; i++) {
         node * n = nlist->nodes[i];
-        for (short j = 0; j < n->neighbourCount; j++) {
-            unsigned int k = n->neighbours[j];
-            if (k >= n->number) continue;
-            QPoint n1 = nodePoly[n->number];
-            QPoint n2 = nodePoly[k];
-            lineVect.append(QLine(n1, n2));
-        }
         if (n->type == NOD_EXTERIOR) boundNodes.append(nodePoly[n->number]);
         else if (n->type == NOD_ISLAND) islandNodes.append(nodePoly[n->number]);
     }
+    
+    unsigned int count;
+    triangle ** elems = get_elements(nlist, &count);
+    QVector<QBrush> depthc = depthMesh(nlist, elems, count);
+    QPainter bat;
+    bat.begin(&depthPic);
+    bat.setPen(QPen(QColor("darkslateblue"), 0, Qt::SolidLine, Qt::RoundCap));
+    for (unsigned int i = 0; i < count; i++) {
+        QPainterPath tri;
+        triangle * t = elems[i];
+        QPoint n1 = nodePoly[t->n1];
+        QPoint n2 = nodePoly[t->n2];
+        QPoint n3 = nodePoly[t->n3];
+        tri.moveTo(n1);
+        tri.lineTo(n2);
+        tri.lineTo(n3);
+        tri.lineTo(n1);
+        
+        bat.setBrush(depthc[i]);
+        bat.drawPath(tri);
+    }
+    bat.end();
     
     meshRect = nodePoly.boundingRect();
     int meshSize = qMax(size().width(), size().height());
@@ -80,8 +123,7 @@ void MeshView::paintEvent(QPaintEvent * event)
     painter.setRenderHint(QPainter::Antialiasing);
     painter.translate(tx, ty);
     painter.scale(sx, sy);
-    painter.setPen(QPen(Qt::black, 0, Qt::SolidLine, Qt::RoundCap));
-    painter.drawLines(lineVect);
+    painter.drawPicture(0, 0, depthPic);
     painter.setPen(QPen(Qt::green, 5.0/scaleVal, Qt::SolidLine, Qt::RoundCap));
     painter.drawPoints(islandNodes);
     painter.setPen(QPen(Qt::blue, 5.0/scaleVal, Qt::SolidLine, Qt::RoundCap));

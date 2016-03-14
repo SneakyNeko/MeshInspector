@@ -12,6 +12,20 @@
 double unitScale   = 1.0;
 double cutoffValue = 10.0;
 
+double get_depth(nodelist * nlist, triangle * ele)
+{
+    int n1 = find_node(nlist, ele->n1);
+    int n2 = find_node(nlist, ele->n2);
+    int n3 = find_node(nlist, ele->n3);
+    
+    double d = nlist->nodes[n1]->depth;
+    d += nlist->nodes[n2]->depth;
+    d += nlist->nodes[n3]->depth;
+    d /= 3.0;
+    
+    return d;
+}
+
 double get_area(nodelist * nlist, int n1, int n2, int n3)
 {
     double s, area;
